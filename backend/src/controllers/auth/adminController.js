@@ -16,7 +16,7 @@ export const deleteUser = asyncHandler(async (req, res) => {
     }
   });
 
-// Get all users
+// Get all Users
 export const getAllUsers = asyncHandler(async (req, res) => {
   try {
     const users = await User.find({});
