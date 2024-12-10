@@ -3,6 +3,10 @@ import User from "../../models/auth/UserModel.js";
 import generateToken from "../../helpers/generateToken.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import Token from "../../models/auth/Token.js";
+import crypto from "node:crypto";
+import hashToken from "../../helpers/hashToken.js";
+import sendEmail from "../../helpers/sendEmail.js";
 
 export const registerUser = asyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
@@ -195,3 +199,99 @@ export const userLoginStatus = asyncHandler(async (req, res) => {
       res.status(401).json(false);
     }
   });
+
+  // Email verification
+  export const verifyEmail = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id);
+
+    // If User exists
+    if(!user) {
+        return res.status(404).json({ message: "User not found!" });
+    }
+
+    // Check if user is already verified
+    if(user.isVerified) {
+        return res.status(400).json({ message: "User is already verified" });
+    }
+
+    let token = await Token.findOne({ userId: user._id });
+
+    // If token exists --> Delete the token
+    if (token) {
+        await token.deleteOne();
+    }
+
+    // Create a verification token using the User id --->
+  const verificationToken = crypto.randomBytes(64).toString("hex") + user._id;
+
+  // Hash the verification token
+  const hashedToken = hashToken(verificationToken);
+
+  await new Token({
+    userId: user._id,
+    verificationToken: hashedToken,
+    createdAt: Date.now(),
+    expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+  }).save();
+
+// Verification link
+const verificationLink = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
+
+// Send email
+const subject = "Email Verification - Druit";
+const send_to = user.email;
+const reply_to = "noreply@gmail.com";
+const template = "emailVerification";
+const send_from = process.env.USER_EMAIL;
+const name = user.name;
+const url = verificationLink;
+
+try {
+  // Order matters ---> Subject, Send_to, Send_from, Reply_to, Template, Name, URL
+  await sendEmail(subject, send_to, send_from, reply_to, template, name, url);
+  return res.json({ message: "Email sent!" });
+} catch (error) {
+  console.log("Error sending email: ", error);
+  return res.status(500).json({ message: "Email could not be sent!" });
+}
+});
+
+// Verifiy User
+export const verifyUser = asyncHandler(async (req, res) => {
+    const { verificationToken } = req.params;
+
+    if(!verificationToken){
+        return res.status(400).json({ message: "Invalid verification token!" });
+    }
+
+// Hash the verification token --> Because it was hashed before saving
+const hashedToken = hashToken(verificationToken);
+
+// Find User with the verification token
+const userToken = await Token.findOne({
+  verificationToken: hashedToken,
+  // Check if the token has not expired
+  expiresAt: { $gt: Date.now() },
+});
+
+if (!userToken) {
+  return res
+    .status(400)
+    .json({ message: "Invalid or expired verification token" });
+}
+
+// Find User with the user ID in the token
+const user = await User.findById(userToken.userId);
+
+if (user.isVerified) {
+  // 400 Bad Request
+  return res.status(400).json({ message: "User is already verified" });
+}
+
+// Update User to verified
+user.isVerified = true;
+await user.save();
+res.status(200).json({ message: "User verified" });
+});
+
+
