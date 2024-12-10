@@ -87,6 +87,7 @@ export const loginUser = asyncHandler(async (req, res) => {
     const isMatch = await bcrypt.compare(password, userExists.password);
 
     if (!isMatch) {
+        // 400 Bad Request
         return res.status(400).json({ message: "Invalid Credentials!" });
     }
 
@@ -119,3 +120,10 @@ export const loginUser = asyncHandler(async (req, res) => {
         res.status(400).json({ message: "Invalid email or password!" });
     }
 });
+
+// Logout User
+export const logoutUser = asyncHandler(async (req, res) => {
+    res.clearCookie("token");
+
+    res.status(200).json({ message: "User logged out" });
+})
