@@ -372,7 +372,7 @@ export const forgotPassword = asyncHandler(async (req, res) => {
     });
   
     if (!userToken) {
-      return res.status(400).json({ message: "Invalid or expired reset token" });
+      return res.status(400).json({ message: "Invalid or expired reset token!" });
     }
   
     // Find User with the User ID in the token
@@ -382,5 +382,33 @@ export const forgotPassword = asyncHandler(async (req, res) => {
     user.password = password;
     await user.save();
   
-    res.status(200).json({ message: "Password reset successfully" });
+    res.status(200).json({ message: "Password reset successfully!" });
   });
+
+  // Change password
+export const changePassword = asyncHandler(async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+  
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "All fields are required!" });
+    }
+  
+    // Find user by id
+    const user = await User.findById(req.user._id);
+  
+    // Compare current password with the hashed password in the database
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+  
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid password!" });
+    }
+  
+    // Reset password
+    if (isMatch) {
+      user.password = newPassword;
+      await user.save();
+      return res.status(200).json({ message: "Password changed successfully!" });
+    } else {
+      return res.status(400).json({ message: "Password could not be changed!" });
+    }
+});
