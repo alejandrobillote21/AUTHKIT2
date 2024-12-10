@@ -14,5 +14,7 @@ router.patch("/user", protect, updateUser);
 // Admin Route
 router.delete("/admin/users/:id", protect, adminMiddleware, deleteUser);
 
+// Get all Users
+router.get("/)
 
 export default router;
