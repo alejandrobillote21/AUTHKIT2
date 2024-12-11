@@ -179,6 +179,126 @@ export const UserContextProvider = ({ children }) => {
         }
     };
 
+    // Email verification
+  const emailVerification = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.post(
+        `${serverUrl}/api/v1/verify-email`,
+        {},
+        {
+          withCredentials: true, // Send Cookies to the server
+        }
+      );
+
+      toast.success("Email verification sent successfully!");
+      setLoading(false);
+    } catch (error) {
+      console.log("Error sending email verification!", error);
+      setLoading(false);
+      toast.error(error.response.data.message);
+    }
+  };
+
+  // Verify User/Email
+  const verifyUser = async (token) => {
+    setLoading(true);
+    try {
+      const res = await axios.post(
+        `${serverUrl}/api/v1/verify-user/${token}`,
+        {},
+        {
+          withCredentials: true, // Send Cookies to the server
+        }
+      );
+
+      toast.success("User verified successfully");
+
+      // Refresh the User details
+      getUser();
+
+      setLoading(false);
+      // Redirect to home page
+      router.push("/");
+    } catch (error) {
+      console.log("Error verifying user", error);
+      toast.error(error.response.data.message);
+      setLoading(false);
+    }
+  };
+
+  // Forgot password Email
+  const forgotPasswordEmail = async (email) => {
+    setLoading(true);
+
+    try {
+      const res = await axios.post(
+        `${serverUrl}/api/v1/forgot-password`,
+        {
+          email,
+        },
+        {
+          withCredentials: true, // Send Cookies to the server
+        }
+      );
+
+      toast.success("Forgot password email sent successfully!");
+      setLoading(false);
+    } catch (error) {
+      console.log("Error sending forgot password email!", error);
+      toast.error(error.response.data.message);
+      setLoading(false);
+    }
+  };
+
+  // Reset password
+  const resetPassword = async (token, password) => {
+    setLoading(true);
+
+    try {
+      const res = await axios.post(
+        `${serverUrl}/api/v1/reset-password/${token}`,
+        {
+          password,
+        },
+        {
+          withCredentials: true, // send cookies to the server
+        }
+      );
+
+      toast.success("Password reset successfully");
+      setLoading(false);
+      // redirect to login page
+      router.push("/login");
+    } catch (error) {
+      console.log("Error resetting password", error);
+      toast.error(error.response.data.message);
+      setLoading(false);
+    }
+  };
+
+  // change password
+  const changePassword = async (currentPassword, newPassword) => {
+    setLoading(true);
+
+    try {
+      const res = await axios.patch(
+        `${serverUrl}/api/v1/change-password`,
+        { currentPassword, newPassword },
+        {
+          withCredentials: true, // send cookies to the server
+        }
+      );
+
+      toast.success("Password changed successfully!");
+      setLoading(false);
+    } catch (error) {
+      console.log("Error changing password!", error);
+      toast.error(error.response.data.message);
+      setLoading(false);
+    }
+  };
+
     // Dynamic form handler
     const handlerUserInput = (name) => (e) => {
         const value = e.target.value;
@@ -200,7 +320,7 @@ export const UserContextProvider = ({ children }) => {
     
         loginStatusGetUser();
       }, []);
-      console.log("user", user);
+
     return (
         <UserContext.Provider 
             value={{
@@ -212,6 +332,12 @@ export const UserContextProvider = ({ children }) => {
                 logoutUser,
                 user,
                 updateUser,
+                emailVerification,
+                verifyUser,
+                forgotPasswordEmail,
+                resetPassword,
+                changePassword,
+
         }}
     >
             {children}
