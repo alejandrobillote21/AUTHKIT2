@@ -20,7 +20,7 @@ export const UserContextProvider = ({ children }) => {
         email: "",
         password: "",
     });
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
 
     // Register User
     const registerUser = async (e) => {
@@ -36,7 +36,7 @@ export const UserContextProvider = ({ children }) => {
         try {
             const res = await axios.post(`${serverUrl}/api/v1/register`, userState);
 
-            toast.success("User registered successfully");
+            toast.success("User registered successfully!");
 
             // Clear the form
             setUserState({
@@ -128,7 +128,7 @@ export const UserContextProvider = ({ children }) => {
         }
       }
 
-      // get user details
+      // Get User details
     const getUser = async () => {
         setLoading(true);
         try {
@@ -148,6 +148,34 @@ export const UserContextProvider = ({ children }) => {
         console.log("Error getting user details", error);
         setLoading(false);
         toast.error(error.response.data.message);
+        }
+    };
+
+    // Update User details
+    const updateUser = async (e, data) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            const res = await axios.patch(`${serverUrl}/api/v1/user`, data, {
+                withCredentials: true, // Send Cookies to the server
+            });
+
+            // Update the User state
+            setUser((prevState) => {
+                return {
+                    ...prevState,
+                    ...res.data,
+                };
+            });
+
+            toast.success("User updated successfully!");
+
+            setLoading(false);
+        } catch (error) {
+            console.log("Error updating user details!", error);
+            setLoading(false);
+            toast.error(error.response.data.message);
         }
     };
 
@@ -172,7 +200,7 @@ export const UserContextProvider = ({ children }) => {
     
         loginStatusGetUser();
       }, []);
-
+      console.log("user", user);
     return (
         <UserContext.Provider 
             value={{
@@ -182,7 +210,8 @@ export const UserContextProvider = ({ children }) => {
                 loginUser,
                 userLoginStatus,
                 logoutUser,
-                
+                user,
+                updateUser,
         }}
     >
             {children}
