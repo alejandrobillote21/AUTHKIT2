@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useRouter } from "next/navigation";
+
 import React, { useEffect, useState, useContext } from "react";
 import toast from "react-hot-toast";
 
@@ -262,22 +263,22 @@ export const UserContextProvider = ({ children }) => {
           password,
         },
         {
-          withCredentials: true, // send cookies to the server
+          withCredentials: true, // Send cookies to the server
         }
       );
 
-      toast.success("Password reset successfully");
+      toast.success("Password reset successfully!");
       setLoading(false);
       // redirect to login page
       router.push("/login");
     } catch (error) {
-      console.log("Error resetting password", error);
+      console.log("Error resetting password!", error);
       toast.error(error.response.data.message);
       setLoading(false);
     }
   };
 
-  // change password
+  // Change password
   const changePassword = async (currentPassword, newPassword) => {
     setLoading(true);
 
@@ -286,7 +287,7 @@ export const UserContextProvider = ({ children }) => {
         `${serverUrl}/api/v1/change-password`,
         { currentPassword, newPassword },
         {
-          withCredentials: true, // send cookies to the server
+          withCredentials: true, // Send Cookies to the server
         }
       );
 
