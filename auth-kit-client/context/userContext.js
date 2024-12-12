@@ -1,6 +1,5 @@
 import axios from "axios";
 import { useRouter } from "next/navigation";
-
 import React, { useEffect, useState, useContext } from "react";
 import toast from "react-hot-toast";
 
@@ -10,18 +9,19 @@ const UserContext = React.createContext();
 axios.defaults.withCredentials = true;
 
 export const UserContextProvider = ({ children }) => {
-    const serverUrl = "http://localhost:8000";
+  const serverUrl = "http://localhost:8000";
 
-    const router = useRouter();
+  const router = useRouter();
 
-    const [user, setUser] = useState({});
-    const [allUsers, setAllUsers] = useState([]);
-    const [userState, setUserState] = useState({
-        name: "",
-        email: "",
-        password: "",
-    });
-    const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState({});
+  const [allUsers, setAllUsers] = useState([]);
+  const [userState, setUserState] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+  const [loading, setLoading] = useState(false);
+
 
     // Register User
     const registerUser = async (e) => {
@@ -300,6 +300,27 @@ export const UserContextProvider = ({ children }) => {
     }
   };
 
+    // Admin routes
+    const getAllUsers = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get(
+          `${serverUrl}/api/v1/admin/users`,
+          {},
+          {
+            withCredentials: true, // Send Cookies to the server
+          }
+        );
+
+        setAllUsers(res.data);
+        setLoading(false);
+      } catch (error) {
+        console.log("Error getting all users!", error);
+        toast.error(error.response.data.message);
+        setLoading(false);
+      }
+    };
+  
     // Dynamic form handler
     const handlerUserInput = (name) => (e) => {
         const value = e.target.value;
@@ -308,6 +329,29 @@ export const UserContextProvider = ({ children }) => {
             ...prevState,
             [name]: value,
         }));
+    };
+
+    // Delete user
+    const deleteUser = async (id) => {
+      setLoading(true);
+      try {
+        const res = await axios.delete(
+          `${serverUrl}/api/v1/admin/users/${id}`,
+          {},
+          {
+            withCredentials: true, // send cookies to the server
+          }
+        );
+
+        toast.success("User deleted successfully");
+        setLoading(false);
+        // refresh the users list
+        getAllUsers();
+      } catch (error) {
+        console.log("Error deleting user", error);
+        toast.error(error.response.data.message);
+        setLoading(false);
+      }
     };
 
     useEffect(() => {
@@ -322,23 +366,30 @@ export const UserContextProvider = ({ children }) => {
         loginStatusGetUser();
       }, []);
 
+      useEffect(() => {
+        if (user.role === "admin") {
+          getAllUsers();
+        }
+      }, [user.role]);
+
     return (
         <UserContext.Provider 
             value={{
-                registerUser,
-                userState,
-                handlerUserInput,
-                loginUser,
-                userLoginStatus,
-                logoutUser,
-                user,
-                updateUser,
-                emailVerification,
-                verifyUser,
-                forgotPasswordEmail,
-                resetPassword,
-                changePassword,
-
+              registerUser,
+              userState,
+              handlerUserInput,
+              loginUser,
+              logoutUser,
+              userLoginStatus,
+              user,
+              updateUser,
+              emailVerification,
+              verifyUser,
+              forgotPasswordEmail,
+              resetPassword,
+              changePassword,
+              allUsers,
+              deleteUser,
         }}
     >
             {children}

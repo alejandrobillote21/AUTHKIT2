@@ -16,7 +16,7 @@ const useRedirect = (redirect: string) => {
           router.push(redirect);
         }
       } catch (error) {
-        console.log("Error in redirecting User!", error);
+        console.log("Error in redirecting User", error);
       }
     };
 
